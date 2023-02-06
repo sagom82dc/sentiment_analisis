@@ -1,0 +1,7 @@
+.gitlab
+.git
+venv
+.gitlab-ci.yml
+tests
+old
+README.md

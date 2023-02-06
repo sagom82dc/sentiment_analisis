@@ -1,0 +1,41 @@
+deploy_dev:
+  stage: release
+  image: cylab/kubectl:latest
+  variables:
+    DEPLOY_NAME: $COMPONENT_NAME-deploy
+    SERVICE_NAME: $COMPONENT_NAME-service
+  before_script:
+    - kubectl config set-credentials gitlab --token=$(echo $K8S_TOKEN | base64 -d)
+    - kubectl config set-context dev --cluster=kubernetes --namespace=sandbox --user=gitlab
+    - kubectl config use-context dev
+    - mensagem="--------------------- \n O **$CI_PROJECT_NAME**:*$CI_COMMIT_REF_SLUG* será atualizado"
+    - |
+      curl -H "Content-Type: application/json" \
+      -d '{"username": "pipeline_notify", "content":"'"$mensagem"'"}' \
+      $DISCORD_WEBHOOK
+
+  script:
+    - envsubst < "../$CI_PROJECT_NAME/.gitlab/manifest/deployment.yaml" > "deploy.yaml"
+    - echo "Subindo imagem de teste em $IMAGE_NAME"
+    - echo "Verificando se $DEPLOY_NAME está ativo no sandbox"
+    - kubectl get deployments
+    - cat deploy.yaml
+    - |
+      if [ -n "$( kubectl get deployments | grep $DEPLOY_NAME)" ];
+        then
+          kubectl delete deployment $DEPLOY_NAME
+      fi
+      
+      if [ -n "$( kubectl get services | grep $SERVICE_NAME)" ];
+        then
+          kubectl delete service $SERVICE_NAME 
+      fi
+      
+      sleep 10
+      kubectl create -f deploy.yaml --save-config
+  after_script:
+    - mensagem="Atualização do **$CI_PROJECT_NAME**:*$CI_COMMIT_REF_SLUG* foi concluída \n ---------------------"
+    - |
+      curl -H "Content-Type: application/json" \
+      -d '{"username": "pipeline_notify", "content":"'"$mensagem"'" }' \
+      $DISCORD_WEBHOOK

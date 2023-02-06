@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: $COMPONENT_NAME-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: $NODE_NAME
+      db: redis
+  template:
+    metadata:
+      labels:
+        app:  $NODE_NAME
+        component: $COMPONENT_NAME
+        db: redis
+    spec:
+      containers:
+        - name: $COMPONENT_NAME-container
+          image: $IMAGE_NAME
+          ports:
+            - containerPort: $CONTAINER_PORT
+          envFrom:
+            - configMapRef:
+                name: $CONFIGMAP_NAME
+      restartPolicy: Always
+      imagePullSecrets:
+        - name: gitlab-token
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: $COMPONENT_NAME-service
+spec:
+  type: NodePort
+  selector:
+    app: $NODE_NAME
+    component: $COMPONENT_NAME
+  ports:
+  - name: $COMPONENT_NAME
+    protocol: TCP
+    port: $CONTAINER_PORT
+    targetPort: $CONTAINER_PORT
+    nodePort: $NODE_PORT

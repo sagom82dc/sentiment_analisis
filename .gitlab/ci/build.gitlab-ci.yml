@@ -1,0 +1,18 @@
+build:
+  tags:
+    - cluster
+  stage: build
+  image: docker:stable
+  services:
+    - docker:latest
+  before_script:
+    - echo "Login $CI_REGISTRY"
+    - echo "Usuario $CI_REGISTRY_USER"
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+  script:
+    - echo "Subindo imagem de teste em $IMAGE_NAME"
+    - docker pull $IMAGE_NAME || true
+    - docker build --cache-from $IMAGE_NAME -f .gitlab/manifest/Dockerfile -t $IMAGE_NAME . --build-arg USER=$REGISTRY_USER --build-arg PASSWORD=$REGISTRY_PASSWORD
+    - docker push $IMAGE_NAME
+  after_script:
+    - docker image prune -f && docker container prune -f

@@ -1,0 +1,21 @@
+workflow:
+  rules:
+    - if: $CI_COMMIT_TAG
+    - if: $CI_COMMIT_BRANCH == 'master'
+
+stages:
+  - build
+  - release
+
+variables:
+  IMAGE_NAME: $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_SLUG:latest
+  NODE_NAME: sandbox
+  COMPONENT_NAME: sentiment-analisis
+  CONTAINER_PORT: 5050
+  CONFIGMAP_NAME: elasticsearch-configmap
+  NODE_PORT: 30801
+
+
+include:
+  - local: .gitlab/ci/build.gitlab-ci.yml
+  - local: .gitlab/ci/release.gitlab-ci.yml
