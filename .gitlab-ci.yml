@@ -12,8 +12,8 @@ variables:
   NODE_NAME: sandbox
   COMPONENT_NAME: sentiment-analisis
   CONTAINER_PORT: 5050
-  CONFIGMAP_NAME: elasticsearch-configmap
-  NODE_PORT: 30801
+  CONFIGMAP_NAME: analisis-sentimento-configmap
+  NODE_PORT: 30500
 
 
 include:
